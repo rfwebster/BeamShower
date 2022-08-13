@@ -1,6 +1,7 @@
 # JEOLBeamShower
 PyJEM script to run a beam shower (to remove contamination) for a given time
-Not yet tested live on a microscope, but intedned for a JEOL F200!
+
+**Not yet tested live on a microscope**, but intended for a JEOL F200 STEM.
 
 ## Simple UI:
 

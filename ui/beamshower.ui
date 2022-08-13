@@ -13,7 +13,7 @@
     <x>0</x>
     <y>0</y>
     <width>415</width>
-    <height>415</height>
+    <height>460</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,17 +25,18 @@
   <property name="minimumSize">
    <size>
     <width>415</width>
-    <height>415</height>
+    <height>460</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>415</width>
-    <height>415</height>
+    <height>460</height>
    </size>
   </property>
   <property name="font">
    <font>
+    <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
     <underline>false</underline>
@@ -49,7 +50,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normalon>rain.png</normalon>
+    <normalon>../BeamShower/ui/rain.png</normalon>
    </iconset>
   </property>
   <property name="windowOpacity">
@@ -71,238 +72,26 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <widget class="QWidget" name="verticalLayoutWidget">
+   <widget class="QWidget" name="gridLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>411</width>
+      <x>10</x>
+      <y>20</y>
+      <width>391</width>
       <height>411</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0">
-     <property name="spacing">
-      <number>10</number>
-     </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SetDefaultConstraint</enum>
-     </property>
-     <property name="leftMargin">
-      <number>5</number>
-     </property>
-     <property name="topMargin">
-      <number>5</number>
-     </property>
-     <property name="rightMargin">
-      <number>5</number>
-     </property>
-     <property name="bottomMargin">
-      <number>5</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="label_7">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-         <italic>false</italic>
-         <bold>true</bold>
-         <underline>false</underline>
-        </font>
-       </property>
-       <property name="text">
-        <string>Set Conditions:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QFormLayout" name="formLayout">
-       <property name="horizontalSpacing">
-        <number>48</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="time_spinBox">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="maximum">
-          <number>90</number>
-         </property>
-         <property name="singleStep">
-          <number>5</number>
-         </property>
-         <property name="value">
-          <number>15</number>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="CL1_label">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="text">
-          <string>CL1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QSpinBox" name="CL1_spinBox">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="maximum">
-          <number>65535</number>
-         </property>
-         <property name="singleStep">
-          <number>16</number>
-         </property>
-         <property name="value">
-          <number>27136</number>
-         </property>
-         <property name="displayIntegerBase">
-          <number>16</number>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="CL2_label">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="text">
-          <string>CL2</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="CL2_spinBox">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="maximum">
-          <number>65535</number>
-         </property>
-         <property name="singleStep">
-          <number>16</number>
-         </property>
-         <property name="value">
-          <number>0</number>
-         </property>
-         <property name="displayIntegerBase">
-          <number>16</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="CL3_label">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="text">
-          <string>CL3</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QSpinBox" name="CL3_spinBox">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="maximum">
-          <number>65535</number>
-         </property>
-         <property name="singleStep">
-          <number>16</number>
-         </property>
-         <property name="value">
-          <number>37294</number>
-         </property>
-         <property name="displayIntegerBase">
-          <number>16</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="time_label">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-           <italic>false</italic>
-           <bold>false</bold>
-           <underline>false</underline>
-          </font>
-         </property>
-         <property name="text">
-          <string>Time (min)</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
       <widget class="QPushButton" name="startButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
@@ -310,9 +99,17 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>450</width>
+         <height>100</height>
+        </size>
+       </property>
        <property name="font">
         <font>
-         <pointsize>24</pointsize>
+         <family>Segoe Print</family>
+         <pointsize>14</pointsize>
+         <weight>75</weight>
          <italic>false</italic>
          <bold>true</bold>
          <underline>false</underline>
@@ -323,17 +120,23 @@
        </property>
       </widget>
      </item>
-     <item>
+     <item row="3" column="0">
       <widget class="QProgressBar" name="progressBar">
+       <property name="maximumSize">
+        <size>
+         <width>450</width>
+         <height>50</height>
+        </size>
+       </property>
        <property name="palette">
         <palette>
          <active>
           <colorrole role="WindowText">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
-             <red>0</red>
-             <green>0</green>
-             <blue>0</blue>
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
             </color>
            </brush>
           </colorrole>
@@ -385,9 +188,9 @@
           <colorrole role="Text">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
-             <red>0</red>
-             <green>0</green>
-             <blue>0</blue>
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
             </color>
            </brush>
           </colorrole>
@@ -440,8 +243,8 @@
            <brush brushstyle="SolidPattern">
             <color alpha="255">
              <red>0</red>
-             <green>120</green>
-             <blue>215</blue>
+             <green>170</green>
+             <blue>0</blue>
             </color>
            </brush>
           </colorrole>
@@ -522,9 +325,9 @@
           <colorrole role="WindowText">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
-             <red>0</red>
-             <green>0</green>
-             <blue>0</blue>
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
             </color>
            </brush>
           </colorrole>
@@ -576,9 +379,9 @@
           <colorrole role="Text">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
-             <red>0</red>
-             <green>0</green>
-             <blue>0</blue>
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
             </color>
            </brush>
           </colorrole>
@@ -630,9 +433,9 @@
           <colorrole role="Highlight">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
-             <red>240</red>
-             <green>240</green>
-             <blue>240</blue>
+             <red>0</red>
+             <green>170</green>
+             <blue>0</blue>
             </color>
            </brush>
           </colorrole>
@@ -700,11 +503,11 @@
            </brush>
           </colorrole>
           <colorrole role="PlaceholderText">
-           <brush brushstyle="NoBrush">
-            <color alpha="255">
-             <red>0</red>
-             <green>0</green>
-             <blue>0</blue>
+           <brush brushstyle="SolidPattern">
+            <color alpha="128">
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
             </color>
            </brush>
           </colorrole>
@@ -891,8 +694,8 @@
            </brush>
           </colorrole>
           <colorrole role="PlaceholderText">
-           <brush brushstyle="NoBrush">
-            <color alpha="255">
+           <brush brushstyle="SolidPattern">
+            <color alpha="128">
              <red>0</red>
              <green>0</green>
              <blue>0</blue>
@@ -904,7 +707,9 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <family>Segoe Print</family>
+         <pointsize>14</pointsize>
+         <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
          <underline>false</underline>
@@ -921,9 +726,276 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="0">
+      <widget class="QGroupBox" name="groupBox">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>200</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>450</width>
+         <height>1000</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe Print</family>
+         <pointsize>14</pointsize>
+         <weight>50</weight>
+         <italic>false</italic>
+         <bold>false</bold>
+         <underline>false</underline>
+        </font>
+       </property>
+       <property name="title">
+        <string>Set Conditions</string>
+       </property>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>40</y>
+          <width>351</width>
+          <height>141</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Segoe Print</family>
+          <pointsize>14</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
+        </property>
+        <layout class="QFormLayout" name="formLayout">
+         <property name="horizontalSpacing">
+          <number>48</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="time_spinBox">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="maximum">
+            <number>90</number>
+           </property>
+           <property name="singleStep">
+            <number>5</number>
+           </property>
+           <property name="value">
+            <number>15</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="CL1_label">
+           <property name="font">
+            <font>
+             <family>Segoe Print</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>CL1:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="CL1_spinBox">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::PlusMinus</enum>
+           </property>
+           <property name="maximum">
+            <number>65535</number>
+           </property>
+           <property name="singleStep">
+            <number>16</number>
+           </property>
+           <property name="value">
+            <number>27136</number>
+           </property>
+           <property name="displayIntegerBase">
+            <number>16</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="CL2_label">
+           <property name="font">
+            <font>
+             <family>Segoe Print</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>CL2:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QSpinBox" name="CL2_spinBox">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="maximum">
+            <number>65535</number>
+           </property>
+           <property name="singleStep">
+            <number>16</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+           <property name="displayIntegerBase">
+            <number>16</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="CL3_label">
+           <property name="font">
+            <font>
+             <family>Segoe Print</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>CL3:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSpinBox" name="CL3_spinBox">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="maximum">
+            <number>65535</number>
+           </property>
+           <property name="singleStep">
+            <number>16</number>
+           </property>
+           <property name="value">
+            <number>37294</number>
+           </property>
+           <property name="displayIntegerBase">
+            <number>16</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="time_label">
+           <property name="font">
+            <font>
+             <family>Segoe Print</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+             <underline>false</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>Time (min):</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </widget>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <resources/>
  <connections/>

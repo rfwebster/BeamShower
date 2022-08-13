@@ -6,10 +6,12 @@ Created on 2021-11-13
 """
 
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.QtCore import QTimer
-from PyQt6.QtTest import QTest
-from ui.beamshower_ui import Ui_MainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import QTimer
+from PyQt5.QtTest import QTest
+from ui.beamshower import Ui_MainWindow
+import ui.palette
+
 import math
 
 _status = 0  # online
@@ -20,17 +22,19 @@ except(ImportError):
     from PyJEM.offline import detector, TEM3
     _status = 1  # offline
 
+lens = TEM3.Lens3()
+deflector = TEM3.Def3()
+eos = TEM3.EOS3()
+det = TEM3.Detector3()
+apt = TEM3.Apt3()
+
 
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self.startButton.clicked.connect(self.go)
-
-        self.lens = TEM3.Lens3()
-        self.deflector = TEM3.Def3()
-        self.eos = TEM3.EOS3()
-        self.det = TEM3.Detector3()
+        self.setPalette(ui.palette.PALETTE)
 
         self.cl1 = 1000 # change these to the values required for beam shower
         self.cl2 = 1000
@@ -38,12 +42,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bk_cl1 = 0
         self.bk_cl2 = 0
         self.bk_cl3 = 0
-        self.probe_size = self.eos.GetSpotSize()
+        self.probe_size = eos.GetSpotSize()
 
         # determine inserted detectors:
         self.inserted_detectors = []
         for d in detector.get_attached_detector():
-            if self.det.GetPosition(d) == 1:
+            if det.GetPosition(d) == 1:
                 self.inserted_detectors.append(d)
         print("Inserted Detectors: {}".format(self.inserted_detectors))
 
@@ -72,7 +76,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.timer.stop()
             # reset TEM
             self.reset()
-            self.startButton.setText("Start Beam Shower")
+            self.statusBar.showMessage("Start Beam Shower")
             self.progressBar.setFormat("")
             self.startButton.setEnabled(True)
 
@@ -86,22 +90,32 @@ class Window(QMainWindow, Ui_MainWindow):
             - Removes detectors
             - Blanks beam under the sample (using deflectors)
             - Unblanks B
-            eam
+            run
         :return:
         """
         self.startButton.setDisabled(True)
         self.save_cl_values()
         self.blank_beam(True)
-        self.startButton.setText("Blanking Beam")
+        self.statusBar.showMessage("Blanking Beam")
         QTest.qWait(1 * 1000)
         self.get_conditions()
-        self.startButton.setText("Setting Lenses")
+        self.statusBar.showMessage("Setting Lenses")
         QTest.qWait(2 * 1000)
-        self.eos.SelectSpotSize(5)  # set spot size 5
+        eos.SelectSpotSize(4)  # set spot size 4
         self.set_cl_values()
-        self.startButton.setText("Removing Detectors")
+        self.statusBar.showMessage("Removing Detectors")
         self.remove_detectors()
-        QTest.qWait(10 * 1000)
+        QTest.qWait(2 * 1000)
+        self.statusBar.showMessage("Inserting OL and SA Apertures")
+        self.insert_aperture(2, 4)
+        self.insert_aperture(4, 4)
+        QTest.qWait(2 * 1000)
+        self.statusBar.showMessage("Remove CL Aperture")
+        self.remove_aperture(1, 0)
+        QTest.qWait(2 * 1000)
+        self.statusBar.showMessage("Lowering Screen")
+        det.SetScreen(0)
+        QTest.qWait(2 * 1000)
         self.blank_beam(False)
         self.startButton.setText("Running Beam Shower")
 
@@ -116,10 +130,10 @@ class Window(QMainWindow, Ui_MainWindow):
         :return:
         """
         self.time = int(self.time_spinBox.text())*60*1000
-        self.cl1 = int(self.CL1_spinBox.text(),16)
+        self.cl1 = int(self.CL1_spinBox.text(), 16)
         print(self.cl1)
-        self.cl2 = int(self.CL2_spinBox.text(),16)
-        self.cl3 = int(self.CL3_spinBox.text(),16)
+        self.cl2 = int(self.CL2_spinBox.text(), 16)
+        self.cl3 = int(self.CL3_spinBox.text(), 16)
 
         return
 
@@ -128,14 +142,14 @@ class Window(QMainWindow, Ui_MainWindow):
         Saves the orignal CL values to a file as a backup
         :return:
         """
-        self.bk_cl1 = self.lens.GetCL1()
-        self.bk_cl2 = self.lens.GetCL2()
-        self.bk_cl3 = self.lens.GetCL3()
+        self.bk_cl1 = lens.GetCL1()
+        self.bk_cl2 = lens.GetCL2()
+        self.bk_cl3 = lens.GetCL3()
         txt = "cl1:{}\n" \
               "cl2:{}\n" \
               "cl3:{}".format(self.bk_cl1, self.bk_cl2, self.bk_cl3)
         print(txt)
-        with open("./cl-values.txt", "w") as f:
+        with open("cl-values.txt", "w") as f:
             f.write(txt)
 
     def blank_beam(self, blank):
@@ -146,10 +160,10 @@ class Window(QMainWindow, Ui_MainWindow):
         """
         if blank is True:
             # blank beam
-            self.deflector.SetBeamBlank(1)
+            deflector.SetBeamBlank(1)
         else:
             # un-blank beam
-            self.deflector.SetBeamBlank(0)
+            deflector.SetBeamBlank(0)
 
     def set_cl_values(self):
         """
@@ -158,9 +172,17 @@ class Window(QMainWindow, Ui_MainWindow):
         TODO: make relative change - need to find out what the relative values are
         :return:
         """
-        self.lens.SetFLCAbs(0, self.cl1)
-        self.lens.SetFLCAbs(1, self.cl2)
-        self.lens.SetFLCAbs(2, self.cl3)
+        lens.SetFLCAbs(0, self.cl1)
+        lens.SetFLCAbs(1, self.cl2)
+        lens.SetFLCAbs(2, self.cl3)
+
+    def insert_aperture(self,k,s):
+        apt.SelectKind(k)
+        apt.SetSize(s)
+
+    def remove_aperture(self,k,s):
+        apt.SelectKind(k)
+        apt.SetSize(s)
 
     def remove_detectors(self):
         """
@@ -168,8 +190,8 @@ class Window(QMainWindow, Ui_MainWindow):
         :return:
         """
         for d in self.inserted_detectors:
-            self.det.SetPosition(d, 1)
-        self.det.SetScreen(0)
+            det.SetPosition(d, 1)
+        det.SetScreen(0)
 
     def insert_detectors(self):
         """
@@ -177,27 +199,35 @@ class Window(QMainWindow, Ui_MainWindow):
         :return:
         """
         for d in self.inserted_detectors:
-            self.det.SetPosition(d, 1)
-        self.det.SetScreen(2)
+            det.SetPosition(d, 1)
+        det.SetScreen(2)
 
     def reset(self):
         """
         Resets all deflectors, apertutres and detectors to orignal values
         :return:
         """
-        self.startButton.setText("Resetting Lenses")
-        self.lens.SetFLCAbs(0, self.bk_cl1) # TODO:  better way to reset Free Lens Control?
-        self.lens.SetFLCAbs(1, self.bk_cl2)
-        self.lens.SetFLCAbs(2, self.bk_cl3)
-        self.eos.SelectSpotSize(self.probe_size)
+        self.blank_beam(True)
+        self.statusBar.showMessage("Resetting Lenses")
+        lens.SetFLCSwAllLens(0)
+        eos.SelectSpotSize(self.probe_size)
         QTest.qWait(2 * 1000)
-        self.startButton.setText("Inserting Detectors")
+        self.statusBar.setText("")
+        self.statusBar.showMessage("Inserting Detectors")
         self.insert_detectors()
-        QTest.qWait(10 * 1000)
+        QTest.qWait(2 * 1000)
+
+        self.statusBar.showMessage("Removing SA and OL Apertures")
+        self.remove_aperture(2, 0)
+        self.remove_aperture(4, 0)
+        QTest.qWait(2 * 1000)
+        self.blank_beam(False)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+
     win = Window()
     win.show()
     sys.exit(app.exec())
