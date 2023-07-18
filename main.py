@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QTimer
 from PyQt5.QtTest import QTest
 from ui.beamshower import Ui_MainWindow
-import ui.palette
 
 import math
 
@@ -30,19 +29,24 @@ apt = TEM3.Apt3()
 
 
 class Window(QMainWindow, Ui_MainWindow):
+    TIME_LIMIT = 15*60*1000
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self.startButton.clicked.connect(self.go)
-        self.setPalette(ui.palette.PALETTE)
 
-        self.cl1 = 1000 # change these to the values required for beam shower
+        self.cl1 = 1000
         self.cl2 = 1000
         self.cl3 = 1000
         self.bk_cl1 = 0
         self.bk_cl2 = 0
         self.bk_cl3 = 0
-        self.probe_size = eos.GetSpotSize()
+
+        try:
+            self.probe_size = eos.GetSpotSize()
+        except Exception as e:
+            print('Error getting spot size:', e)
 
         # determine inserted detectors:
         self.inserted_detectors = []
@@ -51,7 +55,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.inserted_detectors.append(d)
         print("Inserted Detectors: {}".format(self.inserted_detectors))
 
-        self.time = 15*60*1000
+        self.time = self.TIME_LIMIT
         self.time_count = 0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.countdown)
@@ -90,32 +94,32 @@ class Window(QMainWindow, Ui_MainWindow):
             - Removes detectors
             - Blanks beam under the sample (using deflectors)
             - Unblanks B
-            run
+        run
         :return:
         """
         self.startButton.setDisabled(True)
         self.save_cl_values()
         self.blank_beam(True)
-        self.statusBar.showMessage("Blanking Beam")
-        QTest.qWait(1 * 1000)
+        self.statusBar().showMessage("Blanking Beam")
+        QTimer.singleShot(2000, lambda: None)
         self.get_conditions()
-        self.statusBar.showMessage("Setting Lenses")
-        QTest.qWait(2 * 1000)
+        self.statusBar().showMessage("Setting Lenses")
+        QTimer.singleShot(2000, lambda: None)
         eos.SelectSpotSize(4)  # set spot size 4
         self.set_cl_values()
-        self.statusBar.showMessage("Removing Detectors")
+        self.statusBar().showMessage("Removing Detectors")
         self.remove_detectors()
-        QTest.qWait(2 * 1000)
-        self.statusBar.showMessage("Inserting OL and SA Apertures")
+        QTimer.singleShot(2000, lambda: None)
+        self.statusBar().showMessage("Inserting OL and SA Apertures")
         self.insert_aperture(2, 4)
         self.insert_aperture(4, 4)
-        QTest.qWait(2 * 1000)
-        self.statusBar.showMessage("Remove CL Aperture")
+        QTimer.singleShot(2000, lambda: None)
+        self.statusBar().showMessage("Remove CL Aperture")
         self.remove_aperture(1, 0)
-        QTest.qWait(2 * 1000)
-        self.statusBar.showMessage("Lowering Screen")
+        QTimer.singleShot(2000, lambda: None)
+        self.statusBar().showMessage("Lowering Screen")
         det.SetScreen(0)
-        QTest.qWait(2 * 1000)
+        QTimer.singleShot(2000, lambda: None)
         self.blank_beam(False)
         self.startButton.setText("Running Beam Shower")
 
@@ -208,19 +212,19 @@ class Window(QMainWindow, Ui_MainWindow):
         :return:
         """
         self.blank_beam(True)
-        self.statusBar.showMessage("Resetting Lenses")
+        self.statusBar().showMessage("Resetting Lenses")
         lens.SetFLCSwAllLens(0)
         eos.SelectSpotSize(self.probe_size)
-        QTest.qWait(2 * 1000)
-        self.statusBar.setText("")
-        self.statusBar.showMessage("Inserting Detectors")
+        QTimer.singleShot(2000, lambda: None)
+        self.statusBar().setText("")
+        self.statusBar().showMessage("Inserting Detectors")
         self.insert_detectors()
-        QTest.qWait(2 * 1000)
+        QTimer.singleShot(2000, lambda: None)
 
-        self.statusBar.showMessage("Removing SA and OL Apertures")
+        self.statusBar().showMessage("Removing SA and OL Apertures")
         self.remove_aperture(2, 0)
         self.remove_aperture(4, 0)
-        QTest.qWait(2 * 1000)
+        QTimer.singleShot(2000, lambda: None)
         self.blank_beam(False)
 
 
