@@ -147,6 +147,7 @@ class Window(tk.Tk):
 
         self.status_bar = ttk.Label(self, text='', anchor=tk.W)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        
     def on_closing(self):
         self.stop_beam_shower()  # Stop the beam shower if running
         self.destroy()  # Close the window
@@ -181,21 +182,22 @@ class Window(tk.Tk):
         self.start_button.config(command=self.stop_beam_shower)
         
         # Start the beam shower in a new thread using threading.Timer
-        self.beam_shower_thread = Timer(0, self.run_beam_shower)
+        self.beam_shower_thread = Thread(target=self.run_beam_shower)
+        self.beam_shower_event = Event()  # Event to control the thread execution
         self.beam_shower_thread.start()
 
     def run_beam_shower(self):
-        try:         
-            # Update progress bar while the beam shower is running
+        try:
             total_steps = int(self.time / self.TIME_INCREMENT)
             for step in range(total_steps):
-                if hasattr(self, 'beam_shower_thread') and not self.beam_shower_thread.is_alive():
-                    self.beam_shower_thread.cancel()  # Stop the beam shower thread
-                    break  # Stop the loop if the beam_shower_thread has been stopped
+                if self.beam_shower_event.is_set():  # Check if the event is set (stop signal)
+                    break
+
                 progress_percentage = (step / total_steps) * 100
                 self.progress_var.set(progress_percentage)
                 self.update_idletasks()
-                threading.Event().wait(timeout=self.TIME_INCREMENT / 1000)  # Sleep for the desired interval
+                self.beam_shower_event.wait(timeout=self.TIME_INCREMENT / 1000)  # Sleep with event
+
         finally:
             self.progress_var.set(100)  # Ensure progress bar is set to 100% even if beam shower was stopped abruptly
 
@@ -203,9 +205,13 @@ class Window(tk.Tk):
         self.reset()
 
     def stop_beam_shower(self):
-        if hasattr(self, 'beam_shower_thread') and self.beam_shower_thread.is_alive():
-            self.beam_shower_thread.cancel()  # Stop the beam shower thread
-            self.reset()
+        try:
+            if hasattr(self, 'beam_shower_event'):
+                self.beam_shower_event.set()  # Set the event to stop the thread
+                #self.beam_shower_thread.join()  # Wait for the thread to complete
+                self.reset()
+        except Exception as e:
+            print(e)
 
 
     def get_conditions(self):
