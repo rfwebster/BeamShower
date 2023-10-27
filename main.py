@@ -1,237 +1,344 @@
-# -*- coding: utf-8 -*-
-"""
-Created on 2021-11-13
 
-@author: rfwebster
-"""
+import tkinter as tk
+from tkinter import ttk
+import tkinter.font as font
+import time
+import microscopes
 
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtCore import QTimer
-from PyQt5.QtTest import QTest
-from ui.beamshower import Ui_MainWindow
-
-import math
-
-_status = 0  # online
-try:
-    from PyJEM import detector, TEM3
-    TEM3.connect()
-except(ImportError):
-    from PyJEM.offline import detector, TEM3
-    _status = 1  # offline
-
-lens = TEM3.Lens3()
-deflector = TEM3.Def3()
-eos = TEM3.EOS3()
-det = TEM3.Detector3()
-apt = TEM3.Apt3()
+# User Configurable variables
+CL1_VALUE = 20000  # CL1 value to set during Beam Shower
+CL2_VALUE = 20000  # CL2 value to set during Beam Shower
+CL3_VALUE = 20000  # CL3 value to set during Beam Shower
+BS_METHOD = "CL" # options: "CL" or "ENG"
+IL_BLANK = False # options: True or False
+IL_BLANK_TYPE = "IS" # options: "IS" or "FLA"
 
 
-class Window(QMainWindow, Ui_MainWindow):
-    TIME_LIMIT = 15*60*1000
 
-    def __init__(self, parent=None):
+
+class WarningPopup(tk.Toplevel):
+    def __init__(self, parent, message):
         super().__init__(parent)
-        self.setupUi(self)
-        self.startButton.clicked.connect(self.go)
+        self.title("Warning")
+        self.geometry("500x100")
+        self.configure(bg="yellow")
+        self.message = ttk.Label(self, text=message,
+                                 font=("Helvetica", 12, "bold"), justify=tk.CENTER,
+                                 background="yellow", foreground="black")
+        self.message.pack(pady=10)
+        self.ok_button = tk.Button(self, text="OK", width=20, command=self.destroy)
+        self.ok_button.pack(pady=10)
 
-        self.cl1 = 1000
-        self.cl2 = 1000
-        self.cl3 = 1000
-        self.bk_cl1 = 0
-        self.bk_cl2 = 0
-        self.bk_cl3 = 0
+class BeamShowerApp(tk.Tk):
+    """
+    A class giving a GUI window for controlling an electron beam shower application.
+    """
+    time_increment = 1/60
 
-        try:
-            self.probe_size = eos.GetSpotSize()
-        except Exception as e:
-            print('Error getting spot size:', e)
-
-        # determine inserted detectors:
-        self.inserted_detectors = []
-        for d in detector.get_attached_detector():
-            if det.GetPosition(d) == 1:
-                self.inserted_detectors.append(d)
-        print("Inserted Detectors: {}".format(self.inserted_detectors))
-
-        self.time = self.TIME_LIMIT
-        self.time_count = 0
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.countdown)
-
-    def countdown(self):
+    def __init__(self):
         """
-        counts down from the self.time and updates the progress bar
-        when finihed resets the TEM condtions
-        :return:
+        Initializes the Window class and sets up the UI.
         """
-        self.time_count += 1000
-        value = int(self.time_count/self.time * 100)
+        super().__init__()
+        self.title('Beam Shower')
+        #self.geometry('300x380')
+        self.setup_ui()
+        self.configure(bg="black")
 
-        time_remaining = int(self.time-self.time_count)
-        mins = math.floor((time_remaining / 1000) / 60)
-        secs = int((time_remaining / 1000) % 60)
-        if value < 100:
-            self.progressBar.setValue(value)
-            self.progressBar.setFormat("Time Remaining: {:2} : {:2}".format(mins, secs))
+        self.save_TEM_conditions()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)  # Set the callback for window close event
+
+
+    def setup_ui(self) -> None:
+        normal_fonts = font.Font(family='Helvetica', size=12)
+        bold_fonts = font.Font(family='Helvetica', size=12, weight='bold')
+
+        style = ttk.Style()
+        # Set the background color to black and text color to light green
+        style.configure('TLabel', background='black', foreground='light green')
+
+        padx = 10
+        pady = 8
+
+        time_min = 1
+        time_max = 90
+        time_step = 1
+        time_default = 10
+        self.stop_beam_shower_flag = False
+        self.num_start_button_clicks = 0
+
+        self.time_var = tk.IntVar(value=time_default)
+
+        self.centralwidget = ttk.Frame(self,style='TLabel')
+        self.centralwidget.pack(fill=tk.BOTH, expand=False)
+
+        self.label_set = ttk.Label(self.centralwidget, text='Set Conditions:', font=bold_fonts, 
+                                   style='TLabel')
+        self.label_set.pack(pady=pady)
+
+        self.form_frame = ttk.Frame(self.centralwidget,style='TLabel')
+        self.form_frame.pack(padx=padx, pady=pady)
+
+        self.time_label = ttk.Label(self.form_frame, text='Time (min)',
+                                    style='TLabel')
+        self.time_label.grid(row=0, column=0, padx=padx, pady=pady)
+
+        self.time_spinbox = ttk.Spinbox(self.form_frame, textvariable=self.time_var,
+                                        from_=time_min, to=time_max, increment=time_step,
+                                        font=normal_fonts, justify=tk.CENTER, width=10)
+        self.time_spinbox.grid(row=0, column=1, padx=padx, pady=pady)
+
+        self.start_button = ttk.Button(self.centralwidget, text='Start Beam Shower', command=self.start_beam_shower,
+                                        width=20)
+        self.start_button.pack(pady=pady)
+
+        self.progress_var = tk.DoubleVar()
+        
+        self.progress_bar = ttk.Progressbar(self.centralwidget, orient='horizontal', length=200, mode='determinate',
+                                            variable=self.progress_var)
+        self.progress_bar.pack(pady=pady)
+
+        self.status_bar = ttk.Label(self, text='', anchor=tk.W,
+                                    style='TLabel')
+        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        
+    def on_closing(self) -> None:
+        self.stop_beam_shower()  # Stop the beam shower if running
+        self.reset_conditions()  # Reset the conditions
+        self.destroy()  # Close the window
+
+    def start_beam_shower(self) -> None:
+        """
+        Starts the beam shower and updates the progress bar and status bar accordingly.
+
+        If in STEM mode, the function sets the time attribute and starts the beam shower. It then runs a time loop to update
+        the progress bar and status bar, and waits for the time increment. If an error occurs, it updates the status bar with
+        the error message. If not in STEM mode, it updates the status bar with an error message.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        # Check if in STEM mode
+
+        if self.get_mode() == 1:
+            self.stop_beam_shower_flag = False
+            self.start_button.config(text="Stop Beam Shower")
+            self.start_button.config(command=self.stop_beam_shower)
+            try:
+                # Set the time attribute
+                self.time = self.time_var.get()
+
+                self.set_conditions()
+
+                print(
+                    f'Starting Beam Shower for {self.time} minutes.'
+                )
+
+                # run the time loop
+                self.total_steps = int(self.time / self.time_increment)
+                self.step = 0
+                self.update_beam_shower()
+
+            except Exception as e:
+                # Update the status bar with the error message
+                self.status_bar_message(f'Error: {str(e)}')
+
         else:
-            self.progressBar.setValue(100)
-            self.timer.stop()
-            # reset TEM
-            self.reset()
-            self.statusBar.showMessage("Start Beam Shower")
-            self.progressBar.setFormat("")
-            self.startButton.setEnabled(True)
+            # Update the status bar with an error message
+            self.status_bar_message("Error: Not in STEM mode")
+         
+            
 
-    def go(self):
+    def update_beam_shower(self) -> None:
         """
-        Runs the program
-            - Saves the current conditions
-            - Blanks the beam
-            - Sets the probe size to 5/4
-            - Sets the CL lens values for beam shower
-            - Removes detectors
-            - Blanks beam under the sample (using deflectors)
-            - Unblanks B
-        run
-        :return:
-        """
-        self.startButton.setDisabled(True)
-        self.save_cl_values()
-        self.blank_beam(True)
-        self.statusBar().showMessage("Blanking Beam")
-        QTimer.singleShot(2000, lambda: None)
-        self.get_conditions()
-        self.statusBar().showMessage("Setting Lenses")
-        QTimer.singleShot(2000, lambda: None)
-        eos.SelectSpotSize(4)  # set spot size 4
-        self.set_cl_values()
-        self.statusBar().showMessage("Removing Detectors")
-        self.remove_detectors()
-        QTimer.singleShot(2000, lambda: None)
-        self.statusBar().showMessage("Inserting OL and SA Apertures")
-        self.insert_aperture(2, 4)
-        self.insert_aperture(4, 4)
-        QTimer.singleShot(2000, lambda: None)
-        self.statusBar().showMessage("Remove CL Aperture")
-        self.remove_aperture(1, 0)
-        QTimer.singleShot(2000, lambda: None)
-        self.statusBar().showMessage("Lowering Screen")
-        det.SetScreen(0)
-        QTimer.singleShot(2000, lambda: None)
-        self.blank_beam(False)
-        self.startButton.setText("Running Beam Shower")
+        Updates the progress bar and status bar for the beam shower.
 
-        print(self.time)
-        # wait for the time and do the progress bar and label
-        self.timer.start(1000)
+        If the beam shower is still running, it updates the progress bar and status bar with the remaining time and waits
+        for the time increment. If the beam shower is finished, it updates the progress bar and status bar accordingly.
 
-    def get_conditions(self):
-        """
-        Gets conditions from the UI
-        TODO: make relative change
-        :return:
-        """
-        self.time = int(self.time_spinBox.text())*60*1000
-        self.cl1 = int(self.CL1_spinBox.text(), 16)
-        print(self.cl1)
-        self.cl2 = int(self.CL2_spinBox.text(), 16)
-        self.cl3 = int(self.CL3_spinBox.text(), 16)
+        Args:
+            None
 
+        Returns:
+            None
+        """
+        # Calculate the remaining time
+        remaining_time = (self.total_steps - self.step) * self.time_increment * 60
+        minutes = int(remaining_time // 60)
+        seconds = int(remaining_time % 60)
+
+        # Update the status bar with the remaining time
+        self.status_bar_message(f'Remaining time: {minutes:02d}:{seconds:02d}')
+
+        # Update the progress bar
+        progress_percentage = (self.step / self.total_steps) * 100
+        self.progress_var.set(progress_percentage)
+        # self.update_idletasks()
+
+        # Check if the beam shower is stopped
+        if self.stop_beam_shower_flag:
+            # Check if the stop button has been clicked
+            self.status_bar_message('Stopping Beam Shower')
+            # self.update_idletasks()
+            self.reset_conditions()
+            self.status_bar_message('Beam Shower Stopped')
+            return
+
+        elif self.step >= self.total_steps:
+            # Update the status bar
+            self.progress_var.set(100)
+            # self.update_idletasks()
+            self.reset_conditions()
+
+        else:
+            # Wait for the time increment
+            self.step += 1
+            self.after(int(self.time_increment * 60 * 1000), self.update_beam_shower)
+
+
+    def stop_beam_shower(self) -> None:
+        """
+        Stops the Beam Shower and resets the status bar message.
+        """
+        self.stop_beam_shower_flag = True
+        print(self.stop_beam_shower_flag)
+        
+    def get_mode(self) -> int:
+        #check the TEM is in STEM mode
+        return microscope.eos.GetTemStemMode()
+    
+    def save_TEM_conditions(self)-> None:
+        self.probesize = microscope.eos.GetSpotSize()
+        self.CL1 = microscope.lens.GetCL1()
+        self.CL2 = microscope.lens.GetCL2()
+        self.CL3 = microscope.lens.GetCL3()
+        self.FLA = microscope.defl.GetFLA2()
+        self.IS2 = microscope.defl.GetIS2()
+
+
+    def get_duration(self) -> None:
+        """
+        Gets the conditions for the beam shower simulation from the GUI inputs.
+        
+        Returns:
+        None
+        """
+        self.time = int(self.time_spinbox.get(), 10) * 60 * 1000
         return
+    
+    
+    def set_conditions(self) -> None:
+        """
+        Sets the conditions for the beam shower.
+        
+        Returns:
+        None
+        """
+        print("setting up conditions")
 
-    def save_cl_values(self):
-        """
-        Saves the orignal CL values to a file as a backup
-        :return:
-        """
-        self.bk_cl1 = lens.GetCL1()
-        self.bk_cl2 = lens.GetCL2()
-        self.bk_cl3 = lens.GetCL3()
-        txt = "cl1:{}\n" \
-              "cl2:{}\n" \
-              "cl3:{}".format(self.bk_cl1, self.bk_cl2, self.bk_cl3)
-        print(txt)
-        with open("cl-values.txt", "w") as f:
-            f.write(txt)
+        # blank beam
+        microscope.blank_beam(True)
 
-    def blank_beam(self, blank):
-        """
-        Blanks Beam if input is True
-        :param blank:
-        :return:
-        """
-        if blank is True:
-            # blank beam
-            deflector.SetBeamBlank(1)
+        # lower screen
+        microscope.lower_screen()
+
+        # Create a pop-up window with a message
+        popup = WarningPopup(self, "Make sure EDX detector is retracted!")
+        popup.wait_window()
+
+        # remove detectors
+        self.status_bar_message('Removing Detectors')
+        microscope.remove_detectors()
+
+
+
+        # insert apertures or blank below specimen using the IL_Blanker method
+        if IL_BLANK:
+            microscope.IL_blanker(True, IL_BLANK_TYPE)
         else:
-            # un-blank beam
-            deflector.SetBeamBlank(0)
+            self.status_bar_message('Inserting SA and OL Apertures')
+            microscope.insert_aperture(2, 0)
+            microscope.insert_aperture(4, 0)
+        
+        # remove CL aperture
+        microscope.remove_aperture(0)
+        microscope.eos.SelectSpotSize(1)
 
-    def set_cl_values(self):
+        # set CL values
+        self.status_bar_message('Set CL Lenses')
+
+        # Ideally would have access to the cFEG A2 to change the brightness
+        # and the energy filter to change the defocus
+        # without destroying the alignment
+        # maybe in a future version of PyJEM?
+
+
+        if BS_METHOD == "CLA":
+            microscope.lens.SetFLCAbs(0, CL1_VALUE) # CL1
+            microscope.lens.SetFLCAbs(1, CL2_VALUE) # CL2 to make intense beam
+            microscope.lens.SetFLCAbs(2, CL3_VALUE)  # CL3  to defocus
+        else:
+            # make beam brighter
+             # choose the spot size to run the beam shower at
+            # defocus bbeam using energy filter
+            microscope.filt.SetEnergyShift(2000) # set energy shift to 2000 eV to defocus
+
+
+        #unblank beam
+        microscope.blank_beam(False)
+
+
+    def reset_conditions(self) -> None:
         """
-        Sets the condensor lens values to those used for the beam shower
-        TODO - work for more than one spot size
-        TODO: make relative change - need to find out what the relative values are
-        :return:
+        Resets the conditions following the beam shower.
+
+        Returns:
+        None
         """
-        lens.SetFLCAbs(0, self.cl1)
-        lens.SetFLCAbs(1, self.cl2)
-        lens.SetFLCAbs(2, self.cl3)
 
-    def insert_aperture(self,k,s):
-        apt.SelectKind(k)
-        apt.SetSize(s)
+        print("resetting conditions")
+        microscope.blank_beam(True)
+        microscope.eos.SelectSpotSize(microscope.probesize_backup) # rest probe size
 
-    def remove_aperture(self,k,s):
-        apt.SelectKind(k)
-        apt.SetSize(s)
+        self.status_bar_message('Resetting Lenses')
+        if BS_METHOD == "CLA":
+            microscope.lens.SetFLCSwAllLens(0) # reset free lens control
+        else:
+            microscope.filt.SetEnergyShift(0) # reset energy shift
 
-    def remove_detectors(self):
-        """
-        Removes all detectors
-        :return:
-        """
-        for d in self.inserted_detectors:
-            det.SetPosition(d, 1)
-        det.SetScreen(0)
+        self.status_bar_message('Inserting Detectors')
+        microscope.insert_detectors()
 
-    def insert_detectors(self):
-        """
-        Inserts all detectors
-        :return:
-        """
-        for d in self.inserted_detectors:
-            det.SetPosition(d, 1)
-        det.SetScreen(2)
+        if IL_BLANK:
+            # unblanks IL deflector
+            microscope.IL_blanker(False, IL_BLANK_TYPE)
+        else: 
+            self.status_bar_message('Removing SA and OL Apertures')
+            microscope.remove_aperture(2)
+            microscope.remove_aperture(4)
 
-    def reset(self):
-        """
-        Resets all deflectors, apertutres and detectors to orignal values
-        :return:
-        """
-        self.blank_beam(True)
-        self.statusBar().showMessage("Resetting Lenses")
-        lens.SetFLCSwAllLens(0)
-        eos.SelectSpotSize(self.probe_size)
-        QTimer.singleShot(2000, lambda: None)
-        self.statusBar().setText("")
-        self.statusBar().showMessage("Inserting Detectors")
-        self.insert_detectors()
-        QTimer.singleShot(2000, lambda: None)
+        microscope.blank_beam(False)
 
-        self.statusBar().showMessage("Removing SA and OL Apertures")
-        self.remove_aperture(2, 0)
-        self.remove_aperture(4, 0)
-        QTimer.singleShot(2000, lambda: None)
-        self.blank_beam(False)
+        self.stop_beam_shower_flag = False
+        self.start_button.config(text="Start Beam Shower")
+        self.start_button.config(command=self.start_beam_shower)
 
+        self.status_bar_message('Beam Shower Finished')
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    app.setStyle("Fusion")
+    def status_bar_message(self, message) -> None:
+        self.status_bar.config(text=message)
+        self.update_idletasks()
 
-    win = Window()
-    win.show()
-    sys.exit(app.exec())
+    def __del__(self)  -> None:
+        return
+        
+
+if __name__ == '__main__':
+    microscope = microscopes.F200()
+
+    BeamShower = BeamShowerApp()
+    BeamShower.mainloop()
