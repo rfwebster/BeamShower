@@ -2,7 +2,6 @@
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as font
-import time
 import microscopes
 
 # User Configurable variables
@@ -12,8 +11,6 @@ CL3_VALUE = 20000  # CL3 value to set during Beam Shower
 BS_METHOD = "CL" # options: "CL" or "ENG"
 IL_BLANK = False # options: True or False
 IL_BLANK_TYPE = "IS" # options: "IS" or "FLA"
-
-
 
 
 class WarningPopup(tk.Toplevel):
@@ -51,15 +48,15 @@ class BeamShowerApp(tk.Tk):
 
 
     def setup_ui(self) -> None:
-        normal_fonts = font.Font(family='Helvetica', size=12)
-        bold_fonts = font.Font(family='Helvetica', size=12, weight='bold')
+        normal_fonts = font.Font(family='Comic Sans MS', size=12)
+        bold_fonts = font.Font(family='Comic Sans MS', size=16, weight='bold')
 
         style = ttk.Style()
         # Set the background color to black and text color to light green
         style.configure('TLabel', background='black', foreground='light green')
 
-        padx = 10
-        pady = 8
+        padx = 5
+        pady = 5
 
         time_min = 1
         time_max = 90
@@ -81,12 +78,12 @@ class BeamShowerApp(tk.Tk):
         self.form_frame.pack(padx=padx, pady=pady)
 
         self.time_label = ttk.Label(self.form_frame, text='Time (min)',
-                                    style='TLabel')
+                                    style='TLabel', font=normal_fonts)
         self.time_label.grid(row=0, column=0, padx=padx, pady=pady)
 
         self.time_spinbox = ttk.Spinbox(self.form_frame, textvariable=self.time_var,
                                         from_=time_min, to=time_max, increment=time_step,
-                                        font=normal_fonts, justify=tk.CENTER, width=10)
+                                        font=normal_fonts, justify=tk.CENTER, width=6)
         self.time_spinbox.grid(row=0, column=1, padx=padx, pady=pady)
 
         self.start_button = ttk.Button(self.centralwidget, text='Start Beam Shower', command=self.start_beam_shower,
